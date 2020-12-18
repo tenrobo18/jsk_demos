@@ -327,6 +327,15 @@
  
 )
 
+(defun move-hand-to-recpos ()
+  (send *fetch* :rarm :inverse-kinematics
+	(send (send *fetch* :copy-worldcoords) :transform bed) 
+        :debug-view t :rotation-axis nil)
+  (send *irtviewer* :draw-objects) ;; update viewer
+  (send *ri* :angle-vector (send *fetch* :angle-vector) 5000)
+  (send *ri* :wait-interpolation t)  
+)
+  
 #|(defun hand-forward ()
   (setq current-trans (send (send *fetch* :copy-worldcoords) :transform))
   (print current-trans)
