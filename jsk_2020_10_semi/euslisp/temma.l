@@ -250,10 +250,12 @@
   )
 
 (defun hold-hand ()
+ (stop-grasp)
+ 
  (send *fetch* :rarm :shoulder-r :joint-angle -60.0)
  (send *irtviewer* :draw-objects)
  (send *ri* :angle-vector (send *fetch* :angle-vector))
- (send *ri* :wait-interpolation)
+  (send *ri* :wait-interpolation t)
 
  (send *fetch* :rarm :elbow-r :joint-angle 90.0)
  (send *irtviewer* :draw-objects)
@@ -266,8 +268,6 @@
  (send *irtviewer* :draw-objects) ;; update viewer
  (send *ri* :angle-vector (send *fetch* :angle-vector) 5000 :use-torso nil)
  (send *ri* :wait-interpolation )
-
- (stop-grasp)
  
  (send *fetch* :rarm :move-end-pos #f(60 0 0))
  (send *ri* :angle-vector (send *fetch* :angle-vector) 2000)
@@ -284,17 +284,36 @@
  (send *ri* :angle-vector (send *fetch* :angle-vector))
  (send *ri* :wait-interpolation)
 
-  (send *fetch* :rarm :inverse-kinematics
+ (send *fetch* :rarm :inverse-kinematics
+	(send (send *fetch* :copy-worldcoords) :transform (send (send (send bed :translate #f(-350 -50 120) :world) :rotate -pi/2 :z) :rotate pi/2 :y))
+	#|(send (send *fetch* :copy-worldcoords) :transform (send bed :translate #f(-300 0 190) :world))|# 
+        :debug-view t )
+  (send *irtviewer* :draw-objects) ;; update viewer
+  (send *ri* :angle-vector (send *fetch* :angle-vector) 5000)
+  (send *ri* :wait-interpolation )  
+ #| (send *fetch* :rarm :inverse-kinematics
 	(send (send *fetch* :copy-worldcoords) :transform
 	      (make-coords :pos #f(700 450 965) :rpy (float-vector 0 0 (/ pi -2)) )) :debug-view t)
   (send *irtviewer* :draw-objects) ;; update viewer
   (send *ri* :angle-vector (send *fetch* :angle-vector) 5000)
+ (send *ri* :wait-interpolation )|#
+  (send *fetch* :rarm :wrist-r :joint-angle -pi/2)
+  (send *irtviewer* :draw-objects)
+  (send *ri* :angle-vector (send *fetch* :angle-vector))
+  (send *ri* :wait-interpolation t)
+
+  (move-hand 100 100 0)
+
+  (send *fetch* :rarm :wrist-r :joint-angle pi/2)
+  (send *irtviewer* :draw-objects)
+  (send *ri* :angle-vector (send *fetch* :angle-vector))
   (send *ri* :wait-interpolation )
- 
+  
+  (move-hand -100 -100 0)
  )
 
 (defun clean-handle ()
-  (move-hand 200 0 0)
+  (move-hand 180 0 0)
   (move-hand 0 0 50)
   (move-hand 0 0 -50)
   (move-hand -200 0 0)
@@ -319,7 +338,7 @@
 
  (stop-grasp)
 
- (send *fetch* :rarm :move-end-pos #f(-100 0 0))
+ (send *fetch* :rarm :move-end-pos #f(-150 0 0))
  (send *ri* :angle-vector (send *fetch* :angle-vector) 2000)
  (send *ri* :wait-interpolation)
 
@@ -329,13 +348,19 @@
 
 (defun move-hand-to-recpos ()
   (send *fetch* :rarm :inverse-kinematics
-	(send (send *fetch* :copy-worldcoords) :transform bed) 
-        :debug-view t :rotation-axis nil)
+	(send (send *fetch* :copy-worldcoords) :transform (send (send (send bed :translate #f(-350 -50 120) :world) :rotate -pi/2 :z) :rotate pi/2 :y))
+	#|(send (send *fetch* :copy-worldcoords) :transform (send bed :translate #f(-300 0 190) :world))|# 
+        :debug-view t )
   (send *irtviewer* :draw-objects) ;; update viewer
   (send *ri* :angle-vector (send *fetch* :angle-vector) 5000)
-  (send *ri* :wait-interpolation t)  
+  (send *ri* :wait-interpolation )  
 )
-  
+
+(defun see-fetch ()
+   (send *irtviewer* :look-all
+(geo::make-bounding-box
+ (flatten (send-all (send *fetch* :bodies) :vertices))))
+)
 #|(defun hand-forward ()
   (setq current-trans (send (send *fetch* :copy-worldcoords) :transform))
   (print current-trans)
@@ -367,12 +392,16 @@
     (ros::sleep)
     )
   (ros::ros-info "msg [~A]" bed)
+  (send bed :draw-on :flush t :size 1000 :color #f(1 0 0))
 )
 
 (defun whole-process()
   (reset-pose)
+  (search-mark)
   (hold-hand)
+  (search-mark)
   (set-hand)
   (clean-handle)
   (return-hand)
+  (reset-pose)
 )
