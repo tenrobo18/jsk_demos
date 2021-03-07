@@ -42,8 +42,16 @@
   (unix:sleep 1)
 )
 
+(defun look-down ()
+  (send *fetch* :head_tilt_joint :joint-angle 20)
+  (send *irtviewer* :draw-objects)
+  (send *ri* :angle-vector (send *fetch* :angle-vector))
+  (send *ri* :wait-interpolation)
+)
+  
+
 ;; use (mapcar #'(lambda (x) (send x :name)) (send *scene* :spots)) to get list of spots
-(defun move-to-door-front() 
+(defun move-to-73B2-inside-door-front() 
   (send *fetch* :move-to (send *scene* :spot "/eng2/7f/room73B2-fetch-dock-front") :world)
 
   ;; check 20201026-soft3-model, the code to focus on the robot model
@@ -65,10 +73,56 @@
 			     :transform (make-coords :pos #f(-200 100 0) :rpy (float-vector 0 0 0))))
   )
 
-#|(send *fetch* :rarm :angle-vector #f(-55 80 -45 -110 0 30 15))
-(send *irtviewer* :draw-objects) ;; update viewer
-(send *ri* :angle-vector (send *fetch* :angle-vector) 5000)
-(send *ri* :wait-interpolation t)|#
+(defun move-to-73B1-outside-door-front() 
+
+  (setq *room73B1-front* (send (send (send *scene* :spot "/eng2/7f/room73A2-front") :copy-worldcoords) :rotate pi :z  ))
+  (send *fetch* :move-to (send *room73B1-front*
+			       :transform (make-coords :pos #f(200 -1500 0) :rpy (float-vector 0 0 0))) :world) ;; moved in irtviewer
+  (send *irtviewer* :draw-objects) ;; update viewer
+  (send *ri* :move-to  (send *room73B1-front*
+			     :transform (make-coords :pos #f(200 -1500 0) :rpy (float-vector 0 0 0))))
+  )
+
+
+(defun move-to-73B2-outside-door-front() 
+
+  (setq *room73A3-front1* (send (send (send *scene* :spot "/eng2/7f/room73A3-front1") :copy-worldcoords) :rotate 0 :z  ))
+  (send *fetch* :move-to (send *room73A3-front1*
+			       :transform (make-coords :pos #f(-200 100 0) :rpy (float-vector 0 0 0))) :world) ;; moved in irtviewer
+  (send *irtviewer* :draw-objects) ;; update viewer
+  (send *ri* :move-to  (send *room73A3-front1*
+			     :transform (make-coords :pos #f(-200 100 0) :rpy (float-vector 0 0 0))))
+  )
+
+
+(defun move-to-73A2-outside-door-front() 
+
+  (setq *room73A2-front* (send (send (send *scene* :spot "/eng2/7f/room73A2-front") :copy-worldcoords) :rotate 0 :z  ))
+  (send *fetch* :move-to (send *room73A2-front*
+			       :transform (make-coords :pos #f(-290 0 0) :rpy (float-vector 0 0 0))) :world) ;; moved in irtviewer(x y z)
+  (send *irtviewer* :draw-objects) ;; update viewer
+  (send *ri* :move-to  (send *room73A2-front*
+			     :transform (make-coords :pos #f(-290 0 0) :rpy (float-vector 0 0 0))))
+  )
+
+(defun move-to-73A3-outside-door-front()
+  (setq *room73A3-front* (send (send (send *scene* :spot "/eng2/7f/room73A3-front") :copy-worldcoords) :rotate 0 :z  ))
+  (send *fetch* :move-to (send *room73A3-front*
+			       :transform (make-coords :pos #f(-100 0 0) :rpy (float-vector 0 0 0))) :world) ;; moved in irtviewer (x y z)
+  (send *irtviewer* :draw-objects) ;; update viewer
+  (send *ri* :move-to  (send *room73A3-front*
+			     :transform (make-coords :pos #f(-100 0 0) :rpy (float-vector 0 0 0))))
+  )
+
+(defun set-pos-outside ()
+  (search-mark)
+  (setq *door-front-outside* (send  (send (send *fetch* :copy-worldcoords) :transform (send (send (send (send bed :copy-coords) :translate #f(-600 -1000 -500) :world) :rotate  pi :z) :rotate  pi/2 :y)) #|x y z|# #|1075(-420 -160 115) 15(-415 -150 110)|# :copy-worldcoords) )
+  (send *fetch* :move-to (send *door-front-outside*
+			       :transform (make-coords :pos #f(0 0 0) :rpy (float-vector 0 -0 0))) :world) ;; moved in irtviewer(x y z)
+  (send *irtviewer* :draw-objects) ;; update viewer
+  (send *ri* :move-to  (send *door-front-outside*
+			     :transform (make-coords :pos #f(0 0 0) :rpy (float-vector 0 0 0)))) 
+)
 
 (defun hold-door-horizontal()
   
@@ -138,27 +192,6 @@
   )
 
 
-(defun move-to-door-front() 
-  (send *fetch* :move-to (send *scene* :spot "/eng2/7f/room73B2-fetch-dock-front") :world)
-
-  ;; check 20201026-soft3-model, the code to focus on the robot model
-  (send *irtviewer* :look-all
-	(send (geo::make-bounding-box
-	       (flatten (send-all (send *fetch* :bodies) :vertices)))
-	      :grow 2.0))
-
-  #|(setq *table-back* (send (send (send *scene* :spot "/eng2/7f/room73B2-table-back") :copy-worldcoords) :rotate 0 :z  ))
-  (send *fetch* :move-to *table-back* :world) ;; moved in irtviewer
-  (send *irtviewer* :draw-objects) ;; update viewer
-  (send *ri* :move-to *table-back*) |#
-
-  (setq *door-spot* (send (send (send *scene* :spot "door-spot") :copy-worldcoords) :rotate 0 :z  ))
-  (send *fetch* :move-to (send *door-spot*
-			       :transform (make-coords :pos #f(-400 100 0) :rpy (float-vector 0 0 0))) :world) ;; moved in irtviewer
-  (send *irtviewer* :draw-objects) ;; update viewer
-  (send *ri* :move-to  (send *door-spot*
-			     :transform (make-coords :pos #f(0 100 0) :rpy (float-vector 0 0 0))))
-  )
 
 #|(send *fetch* :rarm :angle-vector #f(-55 80 -45 -110 0 30 15))
 (send *irtviewer* :draw-objects) ;; update viewer
@@ -211,6 +244,8 @@
   
   )
 
+
+
 #|(defun hold-hand-pre()
  (send *fetch* :rarm :shoulder-r :joint-angle -60.0)
  (send *irtviewer* :draw-objects)
@@ -255,49 +290,61 @@
  (send *fetch* :rarm :shoulder-r :joint-angle -60.0)
  (send *irtviewer* :draw-objects)
  (send *ri* :angle-vector (send *fetch* :angle-vector))
-  (send *ri* :wait-interpolation t)
+  (send *ri* :wait-interpolation)
 
  (send *fetch* :rarm :elbow-r :joint-angle 90.0)
  (send *irtviewer* :draw-objects)
- (send *ri* :angle-vector (send *fetch* :angle-vector))
+ (send *ri* :angle-vector (send *fetch* :angle-vector) 2000)
  (send *ri* :wait-interpolation)
-
+ 
  (send *fetch* :rarm :inverse-kinematics
 	(send (send *fetch* :copy-worldcoords) :transform
-	      (make-coords :pos #f(-20 -210 520) :rpy (float-vector 0 pi (/ pi 2)) )) :debug-view t)
+	      (make-coords :pos #f(-20 -210 520) :rpy (float-vector 0 pi (/ pi 2)) )) :debug-view t);;1075(-20 -210 520), 15(-20 -215 520) (x? y Z?)
  (send *irtviewer* :draw-objects) ;; update viewer
  (send *ri* :angle-vector (send *fetch* :angle-vector) 5000 :use-torso nil)
- (send *ri* :wait-interpolation )
+ (send *ri* :wait-interpolation)
  
  (send *fetch* :rarm :move-end-pos #f(60 0 0))
+ (send *irtviewer* :draw-objects) ;; update viewer
  (send *ri* :angle-vector (send *fetch* :angle-vector) 2000)
  (send *ri* :wait-interpolation)
 
  (start-grasp)
 
-  
-  )
-
-(defun set-hand ()
  (send *fetch* :rarm :wrist-p :joint-angle -90.0)
  (send *irtviewer* :draw-objects)
  (send *ri* :angle-vector (send *fetch* :angle-vector))
- (send *ri* :wait-interpolation)
+ (send *ri* :wait-interpolation) 
+ )
+
+(defun set-hand-outside ()
 
  (send *fetch* :rarm :inverse-kinematics
-	(send (send *fetch* :copy-worldcoords) :transform (send (send (send bed :translate #f(-350 -50 120) :world) :rotate -pi/2 :z) :rotate pi/2 :y))
+	(send (send *fetch* :copy-worldcoords) :transform (send (send (send bed :translate #f(-420 -160 115) :world) :rotate  -pi/2 :z) :rotate  pi/2 :y)) #|x y z|# #|1075(-420 -160 115) 15(-415 -150 110)|#
 	#|(send (send *fetch* :copy-worldcoords) :transform (send bed :translate #f(-300 0 190) :world))|# 
         :debug-view t )
   (send *irtviewer* :draw-objects) ;; update viewer
-  (send *ri* :angle-vector (send *fetch* :angle-vector) 5000)
-  (send *ri* :wait-interpolation )  
+  (send *ri* :angle-vector (send *fetch* :angle-vector))
+  (send *ri* :wait-interpolation )
+  ()
+  )
+
+(defun set-hand-inside ()
+ (send *fetch* :rarm :inverse-kinematics
+	(send (send *fetch* :copy-worldcoords) :transform (send (send (send bed :translate #f(-350 -50 120) :world) :rotate  -pi/2 :z) :rotate  pi/2 :y))
+	#|(send (send *fetch* :copy-worldcoords) :transform (send bed :translate #f(-300 0 190) :world))|# 
+        :debug-view t )
+  (send *irtviewer* :draw-objects) ;; update viewer
+  (send *ri* :angle-vector (send *fetch* :angle-vector))
+  (send *ri* :wait-interpolation )
+  ()
  #| (send *fetch* :rarm :inverse-kinematics
 	(send (send *fetch* :copy-worldcoords) :transform
 	      (make-coords :pos #f(700 450 965) :rpy (float-vector 0 0 (/ pi -2)) )) :debug-view t)
   (send *irtviewer* :draw-objects) ;; update viewer
   (send *ri* :angle-vector (send *fetch* :angle-vector) 5000)
  (send *ri* :wait-interpolation )|#
-  (send *fetch* :rarm :wrist-r :joint-angle -pi/2)
+  #|(send *fetch* :rarm :wrist-r :joint-angle -pi/2)
   (send *irtviewer* :draw-objects)
   (send *ri* :angle-vector (send *fetch* :angle-vector))
   (send *ri* :wait-interpolation t)
@@ -309,7 +356,7 @@
   (send *ri* :angle-vector (send *fetch* :angle-vector))
   (send *ri* :wait-interpolation )
   
-  (move-hand -100 -100 0)
+  (move-hand -100 -100 0)|#
  )
 
 (defun clean-handle ()
@@ -320,14 +367,14 @@
  )
 
 (defun return-hand ()
-  (send *fetch* :angle-vector (float-vector 22.4306 74.3831 80.2347 -97.0705 99.1346 75.9194 76.8505 0.010871 -0.640125 0.392456))
+ (send *fetch* :angle-vector (float-vector 22.4306 74.3831 80.2347 -97.0705 99.1346 75.9194 76.8505 0.010871 -0.640125 0.392456))
  (send *irtviewer* :draw-objects)
  (send *ri* :angle-vector (send *fetch* :angle-vector))
  (send *ri* :wait-interpolation)
 
  (send *fetch* :rarm :inverse-kinematics
 	(send (send *fetch* :copy-worldcoords) :transform
-	      (make-coords :pos #f(-20 -210 520) :rpy (float-vector 0 pi (/ pi 2)) )) :debug-view t)
+	      (make-coords :pos #f(-20 -210 520) :rpy (float-vector 0 pi (/ pi 2)) )) :debug-view t);;1075(-20 -210 520) 15(-20 -215 520) (x? y Z?)
  (send *irtviewer* :draw-objects) ;; update viewer
  (send *ri* :angle-vector (send *fetch* :angle-vector) 5000 :use-torso nil)
  (send *ri* :wait-interpolation)
@@ -384,6 +431,7 @@
 :debug-view t)|#
 
 (defun search-mark ()
+  (look-down)
   (setq bed nil)
   (ros::rate 10)
   (while (null bed)
@@ -392,16 +440,67 @@
     (ros::sleep)
     )
   (ros::ros-info "msg [~A]" bed)
-  (send bed :draw-on :flush t :size 1000 :color #f(1 0 0))
+  (send bed :draw-on :flush t :size 10000000 :color #f(1 0 0))
+  (objects bed)
+  
 )
 
-(defun whole-process()
+(defun set-hand-spray ()
+  (send *fetch* :rarm :inverse-kinematics
+	(send (send *fetch* :copy-worldcoords) :transform (send (send (send bed :translate #f(-450 -90 115) :world) :rotate  -pi/2 :z) :rotate  pi/2 :y))
+	#|(send (send *fetch* :copy-worldcoords) :transform (send bed :translate #f(-300 0 190) :world))|# 
+        :debug-view t )
+  (send *irtviewer* :draw-objects) ;; update viewer
+  (send *ri* :angle-vector (send *fetch* :angle-vector))
+  (send *ri* :wait-interpolation )
+  )
+
+(defun spraing-hand ()
+  (move-hand 180 0 0)
+  (move-hand -200 0 0)
+  )
+
+(defun whole-cleaning-process-73A3 ()
   (reset-pose)
   (search-mark)
   (hold-hand)
   (search-mark)
-  (set-hand)
+  (set-hand-spray)
+  (spraing-hand)
+  (set-hand-outside)
   (clean-handle)
   (return-hand)
   (reset-pose)
+  )
+
+(defun whole-cleaning-process-inside()
+  (reset-pose)
+  (search-mark)
+  (hold-hand)
+  (search-mark)
+  (set-hand-inside)
+  (clean-handle)
+  (return-hand)
+  (reset-pose)
+  )
+
+(defun whole-cleaning-process-outside()
+  (reset-pose)
+  (search-mark)
+  (hold-hand)
+  (search-mark)
+  (set-hand-outside)
+  (clean-handle)
+  (return-hand)
+  (reset-pose)
+)
+
+(defun whole-process()
+  (reset-pose)
+  (move-to-73A3-outside-door-front)
+  (whole-cleaning-process-outside)
+  (move-to-73A2-outside-door-front)
+  (whole-cleaning-process-outside)
+  (move-to-73B1-outside-door-front)
+  (whole-cleaning-process-outside)
 )
