@@ -440,8 +440,10 @@
     (ros::sleep)
     )
   (ros::ros-info "msg [~A]" bed)
-  (send bed :draw-on :flush t :size 10000000 :color #f(1 0 0))
-  (objects bed)
+  ;;(send bed :draw-on :flush t :size 10000000 :color #f(1 0 0))
+  (setq c1 (make-cube 100 100 1000))
+  (send c1 :move-to  (send (send *fetch* :copy-worldcoords) :transform bed) :world)
+  (objects (list *fetch* *scene* c1))
   
 )
 
