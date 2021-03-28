@@ -116,12 +116,16 @@
 
 (defun set-pos-outside ()
   (search-mark)
-  (setq *door-front-outside* (send  (send (send *fetch* :copy-worldcoords) :transform (send (send (send (send bed :copy-coords) :translate #f(-600 -1000 -500) :world) :rotate  pi :z) :rotate  pi/2 :y)) #|x y z|# #|1075(-420 -160 115) 15(-415 -150 110)|# :copy-worldcoords) )
+  (setq *door-front-outside* (send (send (send (send *ri* :state :worldcoords) :transform bed) :transform  (make-coords :pos #f(800 500 1000) :rpy (float-vector 0 pi/2 pi))) :copy-worldcoords))
+  (send *fetch* :move-to *door-front-outside* :world)
+  (send *irtviewer* :draw-objects)
+  (send *ri* :move-to *door-front-outside* )
+  #|(setq *door-front-outside* (send  (send (send *fetch* :copy-worldcoords) :transform (send (send (send (send bed :copy-coords) :translate #f(-600 -1000 -500) :world) :rotate  pi :z) :rotate  pi/2 :y)) #|x y z|# #|1075(-420 -160 115) 15(-415 -150 110)|# :copy-worldcoords) )
   (send *fetch* :move-to (send *door-front-outside*
 			       :transform (make-coords :pos #f(0 0 0) :rpy (float-vector 0 -0 0))) :world) ;; moved in irtviewer(x y z)
   (send *irtviewer* :draw-objects) ;; update viewer
   (send *ri* :move-to  (send *door-front-outside*
-			     :transform (make-coords :pos #f(0 0 0) :rpy (float-vector 0 0 0)))) 
+			     :transform (make-coords :pos #f(0 0 0) :rpy (float-vector 0 0 0)))) |#
 )
 
 (defun hold-door-horizontal()
@@ -299,12 +303,12 @@
  
  (send *fetch* :rarm :inverse-kinematics
 	(send (send *fetch* :copy-worldcoords) :transform
-	      (make-coords :pos #f(-20 -210 520) :rpy (float-vector 0 pi (/ pi 2)) )) :debug-view t);;1075(-20 -210 520), 15(-20 -215 520) (x? y Z?)
+	      (make-coords :pos #f(-10 -210 520) :rpy (float-vector 0 pi (/ pi 2)) )) :debug-view t);;1075(-20 -210 520), 15(-20 -215 520) (x? y Z?)
  (send *irtviewer* :draw-objects) ;; update viewer
  (send *ri* :angle-vector (send *fetch* :angle-vector) 5000 :use-torso nil)
  (send *ri* :wait-interpolation)
  
- (send *fetch* :rarm :move-end-pos #f(60 0 0))
+ (send *fetch* :rarm :move-end-pos #f(70 0 0))
  (send *irtviewer* :draw-objects) ;; update viewer
  (send *ri* :angle-vector (send *fetch* :angle-vector) 2000)
  (send *ri* :wait-interpolation)
@@ -320,7 +324,7 @@
 (defun set-hand-outside ()
 
  (send *fetch* :rarm :inverse-kinematics
-	(send (send *fetch* :copy-worldcoords) :transform (send (send (send bed :translate #f(-420 -160 115) :world) :rotate  -pi/2 :z) :rotate  pi/2 :y)) #|x y z|# #|1075(-420 -160 115) 15(-415 -150 110)|#
+	(send (send *fetch* :copy-worldcoords) :transform (send (send (send (send bed :copy-worldcoords) :translate #f(-420 -210 125) :world) :rotate  -pi/2 :z) :rotate  pi/2 :y)) #|x y z|# #|1075(-420 -210 125) 15(-415 -150 110)|#
 	#|(send (send *fetch* :copy-worldcoords) :transform (send bed :translate #f(-300 0 190) :world))|# 
         :debug-view t )
   (send *irtviewer* :draw-objects) ;; update viewer
@@ -331,7 +335,7 @@
 
 (defun set-hand-inside ()
  (send *fetch* :rarm :inverse-kinematics
-	(send (send *fetch* :copy-worldcoords) :transform (send (send (send bed :translate #f(-350 -50 120) :world) :rotate  -pi/2 :z) :rotate  pi/2 :y))
+	(send (send *fetch* :copy-worldcoords) :transform (send (send (send (send bed :copy-world-coords) :translate #f(-350 -50 120) :world) :rotate  -pi/2 :z) :rotate  pi/2 :y))
 	#|(send (send *fetch* :copy-worldcoords) :transform (send bed :translate #f(-300 0 190) :world))|# 
         :debug-view t )
   (send *irtviewer* :draw-objects) ;; update viewer
@@ -432,6 +436,7 @@
 
 (defun search-mark ()
   (look-down)
+  (unix::sleep 3)
   (setq bed nil)
   (ros::rate 10)
   (while (null bed)
@@ -444,22 +449,63 @@
   (setq c1 (make-cube 100 100 1000))
   (send c1 :move-to  (send (send *fetch* :copy-worldcoords) :transform bed) :world)
   (objects (list *fetch* *scene* c1))
-  
+  )
+
+(defun receive-hand-message ()
+  (setq hand-message (send (one-shot-subscribe "/chatter" std_msgs::Int16) :data)) 
+  (ros::ros-info "msg [~A]" hand-message)
+
 )
 
 (defun set-hand-spray ()
-  (send *fetch* :rarm :inverse-kinematics
-	(send (send *fetch* :copy-worldcoords) :transform (send (send (send bed :translate #f(-450 -90 115) :world) :rotate  -pi/2 :z) :rotate  pi/2 :y))
+ (send *fetch* :rarm :inverse-kinematics
+	(send (send *fetch* :copy-worldcoords) :transform (send (send (send (send bed :copy-worldcoords) :translate #f(-420 90 115) :world) :rotate  0 :z) :rotate  pi/2 :y)) #|x y z|# #|1075(-420 -160 115) 15(-415 -150 110)|#
 	#|(send (send *fetch* :copy-worldcoords) :transform (send bed :translate #f(-300 0 190) :world))|# 
         :debug-view t )
   (send *irtviewer* :draw-objects) ;; update viewer
   (send *ri* :angle-vector (send *fetch* :angle-vector))
   (send *ri* :wait-interpolation )
+  ()
   )
 
 (defun spraing-hand ()
-  (move-hand 180 0 0)
+  (move-hand 100 0 0)
+  (move-hand -100 0 0)
+  
+  (send *fetch* :rarm :wrist-r :joint-angle pi)
+  (send *irtviewer* :draw-objects)
+  (send *ri* :angle-vector (send *fetch* :angle-vector) 2000)
+  (send *ri* :wait-interpolation)
+
+  (move-hand 100 0 0)
+  (move-hand -100 0 0)
+  )
+
+(defun clean-outside-loop-from-search-to-reset ()
+  (setq hand-message 0)
+  (while (eql hand-message 0)
+     (search-mark)
+     (set-hand-outside)
+     (move-hand 180 0 0)
+     (receive-hand-message)
+     (if (eql hand-message 0)
+	 (progn (print "clean-failed") (move-hand -180 0 0))
+       )
+     )
+  (print "clean-successs")
+  (move-hand 0 0 50)
+  (move-hand 0 0 -50)
   (move-hand -200 0 0)
+  (return-hand)
+  (reset-pose)
+  )
+
+(defun clean-outside-from-search-to-reset ()
+  (search-mark)
+  (set-hand-outside)
+  (clean-handle)
+  (return-hand)
+  (reset-pose)
   )
 
 (defun whole-cleaning-process-73A3 ()
@@ -469,10 +515,7 @@
   (search-mark)
   (set-hand-spray)
   (spraing-hand)
-  (set-hand-outside)
-  (clean-handle)
-  (return-hand)
-  (reset-pose)
+  (clean-outside-loop-from-search-to-reset)
   )
 
 (defun whole-cleaning-process-inside()
@@ -490,19 +533,18 @@
   (reset-pose)
   (search-mark)
   (hold-hand)
-  (search-mark)
-  (set-hand-outside)
-  (clean-handle)
-  (return-hand)
-  (reset-pose)
+  (clean-outside-loop-from-search-to-reset)
 )
 
 (defun whole-process()
   (reset-pose)
   (move-to-73A3-outside-door-front)
-  (whole-cleaning-process-outside)
+  (set-pos-outside)
+  (whole-cleaning-process-73A3)
   (move-to-73A2-outside-door-front)
+  (set-pos-outside)
   (whole-cleaning-process-outside)
   (move-to-73B1-outside-door-front)
+  (set-pos-outside)
   (whole-cleaning-process-outside)
 )
